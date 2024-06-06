@@ -4,6 +4,9 @@
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <PackageProjectUrl>https://github.com/prodigy-sln/Deribit.Client</PackageProjectUrl>
+    <Version>0.0.1</Version>
   </PropertyGroup>
 
   <ItemGroup>
