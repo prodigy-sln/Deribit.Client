@@ -11,11 +11,13 @@ public class InstrumentResponse
     public long ContractSize { get; init; }
     public string? CounterCurrency { get; init; }
     public long CreationTimestamp { get; init; }
-    [JsonIgnore]
-    public DateTimeOffset CreationDate => DateTimeOffset.FromUnixTimeMilliseconds(CreationTimestamp);
+
+    [JsonIgnore] public DateTimeOffset CreationDate => DateTimeOffset.FromUnixTimeMilliseconds(CreationTimestamp);
+
     public long ExpirationTimestamp { get; init; }
-    [JsonIgnore]
-    public DateTimeOffset ExpirationDate => DateTimeOffset.FromUnixTimeMilliseconds(ExpirationTimestamp);
+
+    [JsonIgnore] public DateTimeOffset ExpirationDate => DateTimeOffset.FromUnixTimeMilliseconds(ExpirationTimestamp);
+
     public long InstrumentId { get; init; }
     public required string InstrumentName { get; init; }
     public InstrumentType InstrumentType { get; init; }

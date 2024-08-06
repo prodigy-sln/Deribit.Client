@@ -9,8 +9,10 @@ public class UserPortfolioResponse
     public IReadOnlyDictionary<string, decimal>? DeltaTotalMap { get; init; }
     public decimal SessionUpl { get; init; }
     public decimal FeeBalance { get; init; }
+
     [Obsolete("EstimatedLiquidationRatio is deprecated, use EstimatedLiquidationRatioMap instead.")]
     public decimal EstimatedLiquidationRatio { get; init; }
+
     public decimal InitialMargin { get; init; }
     public IReadOnlyDictionary<string, decimal>? OptionsGammaMap { get; init; }
     public decimal FuturesPl { get; init; }

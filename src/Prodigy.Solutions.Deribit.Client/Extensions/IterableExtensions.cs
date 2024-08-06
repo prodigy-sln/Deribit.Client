@@ -8,6 +8,7 @@ public static class IterableExtensions
     {
         return source.Where(x => x != null).Select(x => x!);
     }
+
     public static IObservable<T> WhereNotNull<T>(this IObservable<T?> source)
     {
         return source.Where(x => x != null).Select(x => x!);

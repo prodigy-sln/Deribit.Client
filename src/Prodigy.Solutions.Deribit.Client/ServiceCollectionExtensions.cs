@@ -13,9 +13,9 @@ public static class ServiceCollectionExtensions
             .Configure(config.Bind)
             .ValidateDataAnnotations()
             .ValidateOnStart();
-        services.AddSingleton<DeribitJsonRpcClient>();
-        services.AddSingleton<DeribitAuthenticationSession>();
-        
+        services.AddScoped<DeribitJsonRpcClient>();
+        services.AddScoped<DeribitAuthenticationSession>();
+
         return services;
     }
 }

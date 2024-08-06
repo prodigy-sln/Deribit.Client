@@ -4,25 +4,20 @@ public class DeribitAuthenticationSession : IDisposable
 {
     private CancellationTokenSource _cts = new();
     private Task? _expireTask;
-    
-#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
-    public event EventHandler TokenExpired;
 
-    public event EventHandler<AuthResponse> Authenticated;
-
-    public event EventHandler LoggedOut;
-
-    public event EventHandler Disconnected;
-#pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
-    
     public bool IsAuthenticated { get; private set; }
-    
+
     public AuthResponse? LastResponse { get; private set; }
-    
+
+    public void Dispose()
+    {
+        _expireTask?.Dispose();
+    }
+
     public void SetAuthenticated(AuthResponse authResponse)
     {
         _cts.Cancel();
-        _cts = new();
+        _cts = new CancellationTokenSource();
         _expireTask = Task.Delay((authResponse.ExpiresIn - 1) * 1000, _cts.Token)
             .ContinueWith(_ =>
             {
@@ -32,7 +27,7 @@ public class DeribitAuthenticationSession : IDisposable
 
         IsAuthenticated = true;
         LastResponse = authResponse;
-        
+
         OnAuthenticated(authResponse);
     }
 
@@ -75,8 +70,13 @@ public class DeribitAuthenticationSession : IDisposable
         Disconnected?.Invoke(this, EventArgs.Empty);
     }
 
-    public void Dispose()
-    {
-        _expireTask?.Dispose();
-    }
+#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
+    public event EventHandler TokenExpired;
+
+    public event EventHandler<AuthResponse> Authenticated;
+
+    public event EventHandler LoggedOut;
+
+    public event EventHandler Disconnected;
+#pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
 }

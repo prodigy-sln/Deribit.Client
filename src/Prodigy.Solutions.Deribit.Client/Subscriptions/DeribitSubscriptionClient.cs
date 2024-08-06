@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Prodigy.Solutions.Deribit.Client.Authentication;
 using Prodigy.Solutions.Deribit.Client.Extensions;
+using Prodigy.Solutions.Deribit.Client.ResponseObjects;
 using Prodigy.Solutions.Deribit.Client.Trading;
 
 namespace Prodigy.Solutions.Deribit.Client.Subscriptions;
@@ -10,11 +11,12 @@ namespace Prodigy.Solutions.Deribit.Client.Subscriptions;
 public class DeribitSubscriptionClient
 {
     private readonly DeribitJsonRpcClient _deribitClient;
-    private readonly DeribitAuthenticationSession _session;
     private readonly ILogger<DeribitSubscriptionClient> _logger;
+    private readonly DeribitAuthenticationSession _session;
     private readonly HashSet<string> _subscribedChannels = new();
 
-    public DeribitSubscriptionClient(DeribitJsonRpcClient deribitClient, DeribitAuthenticationSession session, ILogger<DeribitSubscriptionClient> logger)
+    public DeribitSubscriptionClient(DeribitJsonRpcClient deribitClient, DeribitAuthenticationSession session,
+        ILogger<DeribitSubscriptionClient> logger)
     {
         _deribitClient = deribitClient;
         _session = session;
@@ -26,7 +28,8 @@ public class DeribitSubscriptionClient
     {
         _ = Task.Run(async () =>
         {
-            _logger.LogInformation("Connection lost, reconnecting to channels: {channels}", string.Join(", ", _subscribedChannels));
+            _logger.LogInformation("Connection lost, reconnecting to channels: {channels}",
+                string.Join(", ", _subscribedChannels));
             await SubscribeAsync(_subscribedChannels.ToArray());
         });
     }
@@ -42,14 +45,16 @@ public class DeribitSubscriptionClient
         return _deribitClient.InvokeAsync<string[]>(GetFullEndpoint("subscribe"), new { channels });
     }
 
-    public async Task<IObservable<OrderResponse>> SubscribeToOrderUpdatesAsync(string instrument, SubscriptionInterval interval = SubscriptionInterval.MilliSeconds100)
+    public async Task<IObservable<OrderResponse>> SubscribeToOrderUpdatesAsync(string instrument,
+        SubscriptionInterval interval = SubscriptionInterval.MilliSeconds100)
     {
         var channel = $"user.orders.{instrument}.{interval.GetApiStringValue()}";
         var observable = await SubscribeToMessagesInternalAsync<OrderResponse[]>(channel);
         return observable.SelectMany(r => r);
     }
 
-    public async Task<IObservable<TradeRespone>> SubscribeToTradesAsync(string instrument, SubscriptionInterval interval = SubscriptionInterval.MilliSeconds100)
+    public async Task<IObservable<TradeRespone>> SubscribeToTradesAsync(string instrument,
+        SubscriptionInterval interval = SubscriptionInterval.MilliSeconds100)
     {
         var channel = $"user.trades.{instrument}.{interval.GetApiStringValue()}";
         var observable = await SubscribeToMessagesInternalAsync<TradeRespone[]>(channel);
@@ -63,7 +68,15 @@ public class DeribitSubscriptionClient
 
     public async Task<IObservable<UserPortfolioResponse>> SubscribeToUserPortfolioAsync(CurrencyKind currency)
     {
-        return await SubscribeToMessagesInternalAsync<UserPortfolioResponse>($"user.portfolio.{currency}".ToLowerInvariant());
+        return await SubscribeToMessagesInternalAsync<UserPortfolioResponse>($"user.portfolio.{currency}"
+            .ToLowerInvariant());
+    }
+
+    public async Task<IObservable<UserChangesResponse>> SubscribeToUserChangesAsync(string instrumentName,
+        SubscriptionInterval interval = SubscriptionInterval.MilliSeconds100)
+    {
+        var channel = $"user.changes.{instrumentName}.{interval.GetApiStringValue()}";
+        return await SubscribeToMessagesInternalAsync<UserChangesResponse>(channel);
     }
 
     public async Task<IObservable<QuoteResponse>> SubscribeToQuoteAsync(string instrument)
@@ -75,33 +88,25 @@ public class DeribitSubscriptionClient
     {
         return (await UnsubscribeAsync(new[] { channel })).Contains(channel);
     }
-    
+
     public async Task<string[]> UnsubscribeAsync(IReadOnlyList<string> channels)
     {
         _logger.LogInformation("Unsubscribing from channels: {channels}", string.Join(", ", channels));
 
-        var unsubscribedChannels = await _deribitClient.InvokeAsync<string[]>(GetFullEndpoint("unsubscribe"), new { channels });
-        if (unsubscribedChannels == null)
-        {
-            return [];
-        }
+        var unsubscribedChannels =
+            await _deribitClient.InvokeAsync<string[]>(GetFullEndpoint("unsubscribe"), new { channels });
+        if (unsubscribedChannels == null) return [];
 
-        foreach (var channel in unsubscribedChannels)
-        {
-            _subscribedChannels.Remove(channel);
-        }
+        foreach (var channel in unsubscribedChannels) _subscribedChannels.Remove(channel);
 
         return unsubscribedChannels;
     }
-    
+
     public async Task<string> UnsubscribeAllAsync()
     {
         var result = await _deribitClient.InvokeAsync<string>(GetFullEndpoint("unsubscribe_all"));
-        
-        if (result == null)
-        {
-            throw new Exception("Unsubscribe All request failed");
-        }
+
+        if (result == null) throw new Exception("Unsubscribe All request failed");
 
         _subscribedChannels.Clear();
 
@@ -110,19 +115,16 @@ public class DeribitSubscriptionClient
 
     private async Task<IObservable<TResult>> SubscribeToMessagesInternalAsync<TResult>(string channel)
     {
-        var observable = _deribitClient.GetSubscriptionMessages()?.Where(m => m.Channel == channel).ToTypedMessage<TResult>().WhereNotNull();
-        if (observable == null)
-        {
-            throw new InvalidOperationException("could not subscribe to messages channel");
-        }
+        var observable = _deribitClient.GetSubscriptionMessages()?.Where(m => m.Channel == channel)
+            .ToTypedMessage<TResult>().WhereNotNull();
+        if (observable == null) throw new InvalidOperationException("could not subscribe to messages channel");
 
         if (!_subscribedChannels.Contains(channel))
         {
             var subscribedChannel = await SubscribeAsync(channel);
             if (subscribedChannel != channel)
-            {
-                throw new Exception($"Subscribed channel '{subscribedChannel}' does not match requested channel '{channel}'.");
-            }
+                throw new Exception(
+                    $"Subscribed channel '{subscribedChannel}' does not match requested channel '{channel}'.");
 
             _subscribedChannels.Add(channel);
         }
@@ -130,7 +132,10 @@ public class DeribitSubscriptionClient
         return observable;
     }
 
-    private string GetFullEndpoint(string endpoint) => $"{(_session.IsAuthenticated ? "private" : "public")}/{endpoint}";
+    private string GetFullEndpoint(string endpoint)
+    {
+        return $"{(_session.IsAuthenticated ? "private" : "public")}/{endpoint}";
+    }
 }
 
 public class QuoteResponse
@@ -141,6 +146,6 @@ public class QuoteResponse
     public decimal? BestBidPrice { get; init; }
     public required string InstrumentName { get; init; }
     public long Timestamp { get; init; }
-    [JsonIgnore]
-    public DateTimeOffset DateTime => DateTimeOffset.FromUnixTimeMilliseconds(Timestamp);
+
+    [JsonIgnore] public DateTimeOffset DateTime => DateTimeOffset.FromUnixTimeMilliseconds(Timestamp);
 }

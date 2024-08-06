@@ -4,6 +4,5 @@ namespace Prodigy.Solutions.Deribit.Client.Supporting;
 
 public class HelloResponse
 {
-    [JsonPropertyName("version")]
-    public required Version Version { get; init; }
+    [JsonPropertyName("version")] public required Version Version { get; init; }
 }

@@ -1,6 +1,6 @@
-﻿using System.Globalization;
+﻿using System.Dynamic;
+using System.Globalization;
 using Newtonsoft.Json;
-using Prodigy.Solutions.Deribit.Client.AccountManagement;
 using Prodigy.Solutions.Deribit.Client.MarketData;
 
 namespace Prodigy.Solutions.Deribit.Client.Trading;
@@ -49,22 +49,25 @@ public class DeribitTradingClient
 
     public Task<IReadOnlyCollection<OrderResponse>?> CancelAllAsync()
     {
-        return _deribitClient.InvokeAsync<IReadOnlyCollection<OrderResponse>>("private/cancel_all", new { detailed = true });
+        return _deribitClient.InvokeAsync<IReadOnlyCollection<OrderResponse>>("private/cancel_all",
+            new { detailed = true });
     }
 
     public Task<int?> CancelAllSimpleAsync()
     {
         return _deribitClient.InvokeAsync<int?>("private/cancel_all");
     }
-    
-    public Task<IReadOnlyCollection<OrderResponse>?> GetOpenOrdersByCurrencyAsync(CurrencyKind currency, InstrumentKind? kind, OrderType type = OrderType.All)
+
+    public Task<IReadOnlyCollection<OrderResponse>?> GetOpenOrdersByCurrencyAsync(CurrencyKind currency,
+        InstrumentKind? kind, OrderType type = OrderType.All)
     {
-        dynamic requestObject = new System.Dynamic.ExpandoObject();
+        dynamic requestObject = new ExpandoObject();
         requestObject.currency = currency;
         requestObject.type = type;
-        
+
         if (kind.HasValue) requestObject.kind = kind.Value;
-        return _deribitClient.InvokeAsync<IReadOnlyCollection<OrderResponse>>("private/get_open_orders_by_currency", requestObject);
+        return _deribitClient.InvokeAsync<IReadOnlyCollection<OrderResponse>>("private/get_open_orders_by_currency",
+            requestObject);
     }
 }
 
@@ -87,37 +90,37 @@ public class UpdateOrderRequest
 public class PlaceOrderRequest
 {
     public required string InstrumentName { get; init; }
-    
+
     public decimal? Amount { get; init; }
-    
+
     public decimal? Contracts { get; init; }
-    
+
     public required OrderType Type { get; init; }
-    
+
     public string? Label { get; init; }
-    
+
     public decimal? Price { get; init; }
-    
+
     public required TimeInForce TimeInForce { get; init; }
-    
+
     public decimal MaxShow { get; init; }
-    
+
     public bool PostOnly { get; init; }
-    
+
     public bool RejectPostOnly { get; init; }
-    
+
     public bool ReduceOnly { get; init; }
-    
+
     public decimal? TriggerPrice { get; init; }
-    
+
     public decimal? TriggerOffset { get; init; }
-    
+
     public TriggerType? Trigger { get; init; }
-    
+
     public OptionsAdvancedOrderType? Advanced { get; init; }
-    
+
     public bool? Mmp { get; init; }
-    
+
     public long? ValidUntil { get; init; }
 }
 
@@ -163,7 +166,7 @@ public enum OrderType
 public class CreateOrUpdateOrderResult
 {
     public required OrderResponse Order { get; init; }
-    
+
     public TradeRespone[]? Trades { get; init; }
 }
 
@@ -195,8 +198,11 @@ public class OrderResponse
     public decimal TriggerOffset { get; init; }
     public string? MmpGroup { get; init; }
     public string? Price { get; init; }
+
     [JsonIgnore]
-    public decimal? PriceDecimal => decimal.TryParse(Price, NumberFormatInfo.InvariantInfo, out var result) ? result : null;
+    public decimal? PriceDecimal =>
+        decimal.TryParse(Price, NumberFormatInfo.InvariantInfo, out var result) ? result : null;
+
     public bool IsLiquidation { get; init; }
     public bool ReduceOnly { get; init; }
     public decimal Amount { get; init; }
@@ -290,9 +296,11 @@ public class TradeRespone
 public enum LiquidationType
 {
     Undefined,
+
     // ReSharper disable InconsistentNaming
     M,
     T,
+
     MT
     // ReSharper restore InconsistentNaming
 }
@@ -300,8 +308,10 @@ public enum LiquidationType
 public enum TradeType
 {
     Undefined,
+
     // ReSharper disable InconsistentNaming
     M,
+
     T
     // ReSharper restore InconsistentNaming
 }

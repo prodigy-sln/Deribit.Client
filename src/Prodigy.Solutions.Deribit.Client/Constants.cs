@@ -6,7 +6,7 @@ namespace Prodigy.Solutions.Deribit.Client;
 
 public class Constants
 {
-    public static readonly JsonSerializer JsonSerializer = JsonSerializer.CreateDefault(new ()
+    public static readonly JsonSerializer JsonSerializer = JsonSerializer.CreateDefault(new JsonSerializerSettings
     {
         Converters =
         {

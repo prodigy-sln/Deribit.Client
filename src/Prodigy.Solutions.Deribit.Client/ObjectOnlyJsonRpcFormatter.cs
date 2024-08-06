@@ -14,7 +14,7 @@ public class ObjectOnlyJsonRpcFormatter : JsonMessageFormatter, IJsonRpcMessageF
             request.NamedArguments = new Dictionary<string, object?>();
             request.NamedArgumentDeclaredTypes = new Dictionary<string, Type>();
         }
-        
+
         base.Serialize(bufferWriter, message);
     }
 }

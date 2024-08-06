@@ -7,5 +7,6 @@ public enum CurrencyKind
     ETH,
     USDC,
     USDT,
-    EURR
+    EURR,
+    any
 }

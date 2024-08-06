@@ -8,13 +8,18 @@ public class RequestSignatureGenerator : IDisposable
 {
     private readonly IOptions<DeribitClientOptions> _options;
     private readonly RandomNumberGenerator _rng = RandomNumberGenerator.Create();
-    
+
     private ulong _nonce;
 
     public RequestSignatureGenerator(IOptions<DeribitClientOptions> options)
     {
         _options = options;
         InitializeNonce();
+    }
+
+    public void Dispose()
+    {
+        _rng.Dispose();
     }
 
     private void InitializeNonce()
@@ -37,10 +42,8 @@ public class RequestSignatureGenerator : IDisposable
     public RequestSignatureInfo CreateRequestSignature(long? timestamp = null, string? data = null)
     {
         if (string.IsNullOrWhiteSpace(_options.Value.ClientSecret))
-        {
             throw new InvalidOperationException("No secret configured. Cannot create signature.");
-        }
-        
+
         data ??= string.Empty;
         timestamp ??= DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
         var nonce = GetNonce().ToString();
@@ -50,17 +53,12 @@ public class RequestSignatureGenerator : IDisposable
         using var hmac = new HMACSHA256(keyBytes);
         var hash = hmac.ComputeHash(bytesToSign);
         var hexString = string.Concat(Array.ConvertAll(hash, x => x.ToString("x2")));
-        return new()
+        return new RequestSignatureInfo
         {
             TimeStamp = timestamp.Value,
             Nonce = nonce,
             Data = data,
             Signature = hexString
         };
-    }
-
-    public void Dispose()
-    {
-        _rng.Dispose();
     }
 }

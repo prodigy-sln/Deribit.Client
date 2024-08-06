@@ -16,11 +16,12 @@ public class DeribitSupportingClient
         return await _deribitJsonRpcClient.InvokeAsync<long>("public/get_time");
     }
 
-    public async Task<HelloResponse?> HelloAsync()
+    public async Task<HelloResponse?> HelloAsync(string? clientName = null, string? version = null)
     {
-        var name = Assembly.GetExecutingAssembly().GetName().Name ?? "Prodigy.Solutions.Deribit.Client";
-        var version = (Assembly.GetExecutingAssembly().GetName().Version ?? new Version(0, 0, 0, 0)).ToString();
-        return await _deribitJsonRpcClient.InvokeAsync<HelloResponse>("public/hello", new { client_name = name, client_version = version });
+        var name = clientName ?? Assembly.GetExecutingAssembly().GetName().Name ?? "Prodigy.Solutions.Deribit.Client";
+        version ??= (Assembly.GetExecutingAssembly().GetName().Version ?? new Version(0, 0, 0, 0)).ToString();
+        return await _deribitJsonRpcClient.InvokeAsync<HelloResponse>("public/hello",
+            new { client_name = name, client_version = version });
     }
 
     public async Task<StatusResponse?> StatusAsync()
