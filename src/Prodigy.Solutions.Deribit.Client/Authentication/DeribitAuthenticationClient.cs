@@ -9,9 +9,6 @@ public class DeribitAuthenticationClient
     private readonly IOptions<DeribitClientOptions> _options;
     private readonly RequestSignatureGenerator _signatureGenerator;
 
-    private bool _isAuthenticated;
-    private AuthRequest? _lastRequest;
-
     public DeribitAuthenticationClient(DeribitJsonRpcClient deribitJsonRpcClient,
         RequestSignatureGenerator signatureGenerator, DeribitAuthenticationSession authSession,
         IOptions<DeribitClientOptions> options)
@@ -20,17 +17,9 @@ public class DeribitAuthenticationClient
         _signatureGenerator = signatureGenerator;
         _authSession = authSession;
         _options = options;
-        authSession.Disconnected += AuthSessionOnDisconnected;
     }
-
-    private async void AuthSessionOnDisconnected(object? sender, EventArgs? e)
-    {
-        if (!_isAuthenticated || _lastRequest == null) return;
-
-        await AuthenticateAsync(_lastRequest);
-    }
-
-    public async Task<AuthResponse?> AuthenticateAsync(AuthRequest? request = null)
+    
+    internal async Task<AuthResponse?> AuthenticateAsync(AuthRequest? request = null)
     {
         request ??= new AuthRequest
         {
@@ -77,15 +66,13 @@ public class DeribitAuthenticationClient
         var response = await _deribitJsonRpcClient.InvokeAsync<AuthResponse>("public/auth", requestObject);
         if (response != null)
         {
-            _isAuthenticated = true;
-            _lastRequest = request;
             _authSession.SetAuthenticated(response);
         }
 
         return response;
     }
 
-    public async Task LogoutAsync()
+    internal async Task LogoutAsync()
     {
         Utilities.EnsureAuthenticated(_authSession);
         await _deribitJsonRpcClient.NotifyAsync("private/logout");

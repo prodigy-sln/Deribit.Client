@@ -1,4 +1,5 @@
 ﻿using System.Reactive.Linq;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Prodigy.Solutions.Deribit.Client.Authentication;
@@ -12,15 +13,17 @@ public class DeribitSubscriptionClient
 {
     private readonly DeribitJsonRpcClient _deribitClient;
     private readonly ILogger<DeribitSubscriptionClient> _logger;
+    private readonly IHostApplicationLifetime _appLifetime;
     private readonly DeribitAuthenticationSession _session;
     private readonly HashSet<string> _subscribedChannels = new();
 
     public DeribitSubscriptionClient(DeribitJsonRpcClient deribitClient, DeribitAuthenticationSession session,
-        ILogger<DeribitSubscriptionClient> logger)
+        ILogger<DeribitSubscriptionClient> logger, IHostApplicationLifetime appLifetime)
     {
         _deribitClient = deribitClient;
         _session = session;
         _logger = logger;
+        _appLifetime = appLifetime;
         session.Disconnected += SessionOnDisconnected;
     }
 
@@ -28,10 +31,15 @@ public class DeribitSubscriptionClient
     {
         _ = Task.Run(async () =>
         {
+            if (_appLifetime.ApplicationStopping.IsCancellationRequested)
+            {
+                return;
+            }
+            
             _logger.LogInformation("Connection lost, reconnecting to channels: {channels}",
                 string.Join(", ", _subscribedChannels));
             await SubscribeAsync(_subscribedChannels.ToArray());
-        });
+        }, _appLifetime.ApplicationStopping);
     }
 
     public async Task<string?> SubscribeAsync(string channel)

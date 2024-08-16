@@ -1,5 +1,7 @@
 ﻿using System.Diagnostics;
 using System.Dynamic;
+using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Text;
 using Prodigy.Solutions.Deribit.Client.Authentication;
 
@@ -20,10 +22,16 @@ public static class Utilities
     public static ExpandoObject ConvertParametersToExpandoObject(params object?[] args)
     {
         var sf = new StackFrame(1);
-        var callerParams = sf.GetMethod()?.GetParameters();
+        var callerMethod = GetCorrectMethodAlsoForStateMachine(sf.GetMethod());
+        var callerParams = callerMethod?.GetParameters();
 
         if (callerParams == null) throw new InvalidOperationException("could not determine parameters");
-        if (callerParams.Length != args.Length) throw new ArgumentException("invalid argument count");
+        if (callerParams.Length != args.Length)
+        {
+            var caller = callerMethod?.Name;
+            var signature = string.Join(", ", callerParams.Select(p => $"{p.GetType().Name} {p.Name}"));
+            throw new ArgumentException($"invalid argument count. required params: {callerParams.Length} [{caller}({signature})]. passed: {args.Length}; Stackframe: {sf}");
+        }
 
         var expando = new ExpandoObject();
         for (var i = 0; i < callerParams.Length; i++)
@@ -36,6 +44,26 @@ public static class Utilities
         }
 
         return expando;
+    }
+    
+    private static MethodBase? GetCorrectMethodAlsoForStateMachine(MethodBase? method)
+    {
+        if (method == null)
+        {
+            return null;
+        }
+        
+        if (!(method.DeclaringType?.GetInterfaces().Any(i => i == typeof(IAsyncStateMachine)))
+            .GetValueOrDefault())
+        {
+            return method;
+        }
+        
+        var generatedType = method.DeclaringType;
+        var originalType = generatedType?.DeclaringType;
+        var foundMethod = originalType?.GetMethods(BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly)
+            .Single(m => m.GetCustomAttribute<AsyncStateMachineAttribute>()?.StateMachineType == generatedType);
+        return foundMethod;
     }
 
     public static string ToLowerSnakeCase(this string str)

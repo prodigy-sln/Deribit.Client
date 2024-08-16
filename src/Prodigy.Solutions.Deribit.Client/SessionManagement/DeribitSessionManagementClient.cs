@@ -1,4 +1,4 @@
-﻿using Prodigy.Solutions.Deribit.Client.Authentication;
+using Prodigy.Solutions.Deribit.Client.Authentication;
 
 namespace Prodigy.Solutions.Deribit.Client.SessionManagement;
 

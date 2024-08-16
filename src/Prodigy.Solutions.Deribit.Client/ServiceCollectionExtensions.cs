@@ -1,8 +1,9 @@
 ﻿using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
+using Prodigy.Solutions.Deribit.Client;
 using Prodigy.Solutions.Deribit.Client.Authentication;
 
-namespace Prodigy.Solutions.Deribit.Client;
+// ReSharper disable once CheckNamespace -- Service injection
+namespace Microsoft.Extensions.DependencyInjection;
 
 public static class ServiceCollectionExtensions
 {
@@ -15,6 +16,7 @@ public static class ServiceCollectionExtensions
             .ValidateOnStart();
         services.AddScoped<DeribitJsonRpcClient>();
         services.AddScoped<DeribitAuthenticationSession>();
+        services.AddTransient<RateLimitedThrottler>();
 
         return services;
     }

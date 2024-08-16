@@ -7,6 +7,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{929BB242-8EF
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Prodigy.Solutions.Deribit.Client", "src\Prodigy.Solutions.Deribit.Client\Prodigy.Solutions.Deribit.Client.csproj", "{52968099-215B-45F3-A9F1-FF55BC72C97A}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Prodigy.Solutions.Deribit.Client.Generators", "src\Prodigy.Solutions.Deribit.Client.Generators\Prodigy.Solutions.Deribit.Client.Generators.csproj", "{F5D98B2A-E604-4966-A77A-2C88343F89AA}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -17,11 +19,16 @@ Global
 		{52968099-215B-45F3-A9F1-FF55BC72C97A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{52968099-215B-45F3-A9F1-FF55BC72C97A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{52968099-215B-45F3-A9F1-FF55BC72C97A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F5D98B2A-E604-4966-A77A-2C88343F89AA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F5D98B2A-E604-4966-A77A-2C88343F89AA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F5D98B2A-E604-4966-A77A-2C88343F89AA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F5D98B2A-E604-4966-A77A-2C88343F89AA}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{52968099-215B-45F3-A9F1-FF55BC72C97A} = {929BB242-8EF2-4C56-AFFF-33AD2542F9B7}
+		{F5D98B2A-E604-4966-A77A-2C88343F89AA} = {929BB242-8EF2-4C56-AFFF-33AD2542F9B7}
 	EndGlobalSection
 EndGlobal

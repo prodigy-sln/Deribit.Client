@@ -1,65 +1,73 @@
 ﻿using System.Dynamic;
 using System.Globalization;
+using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using Prodigy.Solutions.Deribit.Client.MarketData;
+using StreamJsonRpc;
 
 namespace Prodigy.Solutions.Deribit.Client.Trading;
 
 public class DeribitTradingClient
 {
     private readonly DeribitJsonRpcClient _deribitClient;
+    private readonly IOptions<DeribitClientOptions> _options;
 
-    public DeribitTradingClient(DeribitJsonRpcClient deribitClient)
+    public DeribitTradingClient(DeribitJsonRpcClient deribitClient, IOptions<DeribitClientOptions> options)
     {
         _deribitClient = deribitClient;
+        _options = options;
     }
 
-    public Task<CreateOrUpdateOrderResult?> PlaceOrderAsync(OrderDirection direction, PlaceOrderRequest request)
+    public Task<CreateOrUpdateOrderResult?> PlaceOrderAsync(OrderDirection direction, PlaceOrderRequest request, CancellationToken cancellationToken = default)
     {
         switch (direction)
         {
             case OrderDirection.Buy:
-                return BuyAsync(request);
+                return BuyAsync(request, cancellationToken);
             case OrderDirection.Sell:
-                return SellAsync(request);
+                return SellAsync(request, cancellationToken);
             default:
                 throw new ArgumentOutOfRangeException(nameof(direction), direction, null);
         }
     }
 
-    public Task<CreateOrUpdateOrderResult?> BuyAsync(PlaceOrderRequest request)
+    public Task<CreateOrUpdateOrderResult?> BuyAsync(PlaceOrderRequest request, CancellationToken cancellationToken = default)
     {
-        return _deribitClient.InvokeAsync<CreateOrUpdateOrderResult>("private/buy", request);
+        return _deribitClient.InvokeAsync<CreateOrUpdateOrderResult>("private/buy", request,
+            _options.Value.MatchingTokens, cancellationToken);
     }
 
-    public Task<CreateOrUpdateOrderResult?> SellAsync(PlaceOrderRequest request)
+    public Task<CreateOrUpdateOrderResult?> SellAsync(PlaceOrderRequest request, CancellationToken cancellationToken = default)
     {
-        return _deribitClient.InvokeAsync<CreateOrUpdateOrderResult>("private/sell", request);
+        return _deribitClient.InvokeAsync<CreateOrUpdateOrderResult>("private/sell", request,
+            _options.Value.MatchingTokens, cancellationToken);
     }
 
-    public Task<CreateOrUpdateOrderResult?> EditAsync(UpdateOrderRequest request)
+    public Task<CreateOrUpdateOrderResult?> EditAsync(UpdateOrderRequest request, CancellationToken cancellationToken = default)
     {
-        return _deribitClient.InvokeAsync<CreateOrUpdateOrderResult>("private/edit", request);
+        return _deribitClient.InvokeAsync<CreateOrUpdateOrderResult>("private/edit", request,
+            _options.Value.MatchingTokens, cancellationToken);
     }
 
-    public Task<OrderResponse?> CancelAsync(string orderId)
+    public Task<OrderResponse?> CancelAsync(string orderId, CancellationToken cancellationToken = default)
     {
-        return _deribitClient.InvokeAsync<OrderResponse>("private/cancel", new { order_id = orderId });
+        return _deribitClient.InvokeAsync<OrderResponse>("private/cancel", new { order_id = orderId },
+            _options.Value.MatchingTokens, cancellationToken);
     }
 
-    public Task<IReadOnlyCollection<OrderResponse>?> CancelAllAsync()
+    public Task<IReadOnlyCollection<OrderResponse>?> CancelAllAsync(CancellationToken cancellationToken = default)
     {
         return _deribitClient.InvokeAsync<IReadOnlyCollection<OrderResponse>>("private/cancel_all",
-            new { detailed = true });
+            new { detailed = true }, _options.Value.MatchingTokens, cancellationToken);
     }
 
-    public Task<int?> CancelAllSimpleAsync()
+    public Task<int?> CancelAllSimpleAsync(CancellationToken cancellationToken = default)
     {
-        return _deribitClient.InvokeAsync<int?>("private/cancel_all");
+        return _deribitClient.InvokeAsync<int?>("private/cancel_all", ct: cancellationToken);
     }
 
     public Task<IReadOnlyCollection<OrderResponse>?> GetOpenOrdersByCurrencyAsync(CurrencyKind currency,
-        InstrumentKind? kind, OrderType type = OrderType.All)
+        InstrumentKind? kind, OrderType type = OrderType.All, CancellationToken cancellationToken = default)
     {
         dynamic requestObject = new ExpandoObject();
         requestObject.currency = currency;
@@ -67,7 +75,7 @@ public class DeribitTradingClient
 
         if (kind.HasValue) requestObject.kind = kind.Value;
         return _deribitClient.InvokeAsync<IReadOnlyCollection<OrderResponse>>("private/get_open_orders_by_currency",
-            requestObject);
+            requestObject, _options.Value.MatchingTokens, cancellationToken);
     }
 }
 
