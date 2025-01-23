@@ -130,6 +130,44 @@ public class PlaceOrderRequest
     public bool? Mmp { get; init; }
 
     public long? ValidUntil { get; init; }
+    
+    public LinkedOrderType? LinkedOrderType { get; init; }
+    
+    public TriggerFillCondition? TriggerFillCondition { get; init; }
+    
+    public OtocoConfig[]? OtocoConfig { get; init; }
+}
+
+public class OtocoConfig
+{
+    public decimal? Amount { get; init; }
+    public OrderDirection Direction { get; init; }
+    public OrderType Type { get; init; }
+    public string? Label { get; init; }
+    public decimal? Price { get; init; }
+    public bool ReduceOnly { get; init; }
+    public TimeInForce? TimeInForce { get; init; }
+    public bool PostOnly { get; init; }
+    public bool RejectPostOnly { get; init; }
+    public decimal? TriggerPrice { get; init; }
+    public decimal? TriggerOffset { get; init; }
+    public TriggerType? Trigger { get; init; }
+}
+
+public enum TriggerFillCondition
+{
+    Undefined,
+    FirstHit,
+    CompleteFill,
+    Incremental
+}
+
+public enum LinkedOrderType
+{
+    Undefined,
+    OneTriggersOther,
+    OneCancelsOther,
+    OneTriggersOneCancelsOther
 }
 
 public enum OptionsAdvancedOrderType
@@ -230,6 +268,7 @@ public class OrderResponse
     public bool IsRebalance { get; init; }
     public decimal AveragePrice { get; init; }
     public OptionsAdvancedOrderType? Advanced { get; init; }
+    public bool IsSecondaryOto { get; init; }
 }
 
 public enum OrderDirection
@@ -251,7 +290,10 @@ public enum OrderCancelReason
     PositionLocked,
     MmpTrigger,
     MmpConfigCurtailment,
-    EditPostOnlyReject
+    EditPostOnlyReject,
+    OtoPrimaryClosed,
+    OcoOtherClosed,
+    Settlement
 }
 
 public enum OrderState

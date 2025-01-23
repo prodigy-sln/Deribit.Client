@@ -123,8 +123,17 @@ public class DeribitSubscriptionClient
 
     private async Task<IObservable<TResult>> SubscribeToMessagesInternalAsync<TResult>(string channel)
     {
-        var observable = _deribitClient.GetSubscriptionMessages()?.Where(m => m.Channel == channel)
-            .ToTypedMessage<TResult>().WhereNotNull();
+        var observable = _deribitClient.GetSubscriptionMessages()?
+            .Where(m => m.Channel == channel)
+            .ToTypedMessage<TResult>()
+            .Select(x =>
+            {
+                if (!x.HasException) return x.Value;
+                
+                _logger.LogError(x.Exception, "Error in subscription");
+                return default;
+            })
+            .WhereNotNull();
         if (observable == null) throw new InvalidOperationException("could not subscribe to messages channel");
 
         if (!_subscribedChannels.Contains(channel))
